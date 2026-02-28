@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter};
 use tokio::sync::watch;
 use tracing::{info, warn};
 
-use tft_capture::CaptureStatus;
+use tft_capture::{CaptureStatus, TargetWindow};
 use tft_vision::{ChampionMatcher, DigitReader, VisionResult};
 
 /// Manages the capture → CV → state → advice pipeline
@@ -15,12 +15,14 @@ pub struct Pipeline {
     stop: Arc<AtomicBool>,
     status_rx: watch::Receiver<CaptureStatus>,
     vision_rx: watch::Receiver<Option<VisionResult>>,
+    target_window: TargetWindow,
 }
 
 impl Pipeline {
     /// Start the pipeline background tasks
     pub fn start(app_handle: AppHandle, capture_interval_ms: u64, data_dir: PathBuf) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
+        let target_window = tft_capture::new_target_window();
 
         let (frame_tx, frame_rx) = watch::channel::<Option<Arc<RgbaImage>>>(None);
         let (status_tx, status_rx) = watch::channel(CaptureStatus::default());
@@ -30,8 +32,16 @@ impl Pipeline {
 
         // Start capture loop
         let stop_clone = stop.clone();
+        let target_clone = target_window.clone();
         tauri::async_runtime::spawn(async move {
-            tft_capture::capture_loop(frame_tx, status_tx, capture_interval, stop_clone).await;
+            tft_capture::capture_loop(
+                frame_tx,
+                status_tx,
+                capture_interval,
+                stop_clone,
+                target_clone,
+            )
+            .await;
         });
 
         // Start vision processing loop
@@ -41,17 +51,23 @@ impl Pipeline {
             // Load matcher and OCR on a blocking thread
             let data_dir_clone = data_dir.clone();
             let init = tokio::task::spawn_blocking(move || {
-                let matcher = ChampionMatcher::load(&data_dir_clone)
-                    .unwrap_or_else(|e| {
-                        warn!("Failed to load champion matcher: {}. Recognition disabled.", e);
-                        ChampionMatcher::load(&PathBuf::from("/dev/null"))
-                            .unwrap_or_else(|_| panic!("Failed to create empty matcher"))
-                    });
+                let matcher = ChampionMatcher::load(&data_dir_clone).unwrap_or_else(|e| {
+                    warn!(
+                        "Failed to load champion matcher: {}. Recognition disabled.",
+                        e
+                    );
+                    ChampionMatcher::load(&PathBuf::from("/dev/null"))
+                        .unwrap_or_else(|_| panic!("Failed to create empty matcher"))
+                });
                 let digit_reader = DigitReader::new();
                 info!(
                     "Vision pipeline ready: {} templates, OCR {}",
                     matcher.template_count(),
-                    if digit_reader.is_available() { "enabled" } else { "disabled" }
+                    if digit_reader.is_available() {
+                        "enabled"
+                    } else {
+                        "disabled"
+                    }
                 );
                 (Arc::new(matcher), Arc::new(digit_reader))
             })
@@ -90,13 +106,9 @@ impl Pipeline {
             }
         });
 
-        // Start event emission loop (sends status + game state to frontend)
+        // Emit capture status to frontend
         let mut status_rx_clone = status_rx.clone();
-        let mut vision_rx_clone = vision_rx.clone();
         let app_clone = app_handle.clone();
-        let app_clone2 = app_handle.clone();
-
-        // Emit capture status
         tauri::async_runtime::spawn(async move {
             loop {
                 if status_rx_clone.changed().await.is_err() {
@@ -115,7 +127,9 @@ impl Pipeline {
             }
         });
 
-        // Emit vision results as game state
+        // Emit vision results as game state to frontend
+        let mut vision_rx_clone = vision_rx.clone();
+        let app_clone2 = app_handle.clone();
         tauri::async_runtime::spawn(async move {
             loop {
                 if vision_rx_clone.changed().await.is_err() {
@@ -146,22 +160,28 @@ impl Pipeline {
             stop,
             status_rx,
             vision_rx,
+            target_window,
         }
     }
 
-    /// Stop the pipeline
     pub fn stop(&self) {
         self.stop.store(true, Ordering::Relaxed);
         info!("Pipeline stop requested");
     }
 
-    /// Get the current capture status
     pub fn capture_status(&self) -> CaptureStatus {
         self.status_rx.borrow().clone()
     }
 
-    /// Get the latest vision result
     pub fn latest_vision(&self) -> Option<VisionResult> {
         self.vision_rx.borrow().clone()
+    }
+
+    /// Set the target window title for capture
+    pub fn set_target_window(&self, title: Option<String>) {
+        if let Ok(mut target) = self.target_window.write() {
+            info!("Target window set to: {:?}", title);
+            *target = title;
+        }
     }
 }

@@ -20,6 +20,8 @@ pub fn run() {
             commands::stop_capture,
             commands::get_capture_status,
             commands::get_game_state,
+            commands::list_windows,
+            commands::set_target_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

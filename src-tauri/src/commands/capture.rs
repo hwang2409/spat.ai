@@ -13,23 +13,19 @@ pub fn start_capture(
     let mut pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
 
     if pipeline.is_some() {
-        return Ok(()); // Already running
+        return Ok(());
     }
 
-    // Resolve the data directory relative to the app's resource directory
     let data_dir = app_handle
         .path()
         .resource_dir()
         .ok()
         .map(|p| p.join("data"))
         .unwrap_or_else(|| {
-            // Fallback: look for data/ relative to the executable or CWD
             let exe_dir = std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.to_path_buf()));
             if let Some(dir) = exe_dir {
-                // In dev mode, the executable is in src-tauri/target/debug/
-                // Data is at the project root
                 let project_root = dir
                     .parent()
                     .and_then(|p| p.parent())
@@ -46,7 +42,7 @@ pub fn start_capture(
 
     tracing::info!("Data directory: {}", data_dir.display());
 
-    let p = Pipeline::start(app_handle, 500, data_dir); // 2 FPS
+    let p = Pipeline::start(app_handle, 500, data_dir);
     *pipeline = Some(p);
 
     Ok(())
@@ -55,11 +51,9 @@ pub fn start_capture(
 #[tauri::command]
 pub fn stop_capture(pipeline_state: State<'_, PipelineState>) -> Result<(), String> {
     let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-
     if let Some(ref p) = *pipeline {
         p.stop();
     }
-
     Ok(())
 }
 
@@ -68,7 +62,6 @@ pub fn get_capture_status(
     pipeline_state: State<'_, PipelineState>,
 ) -> Result<serde_json::Value, String> {
     let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-
     match &*pipeline {
         Some(p) => {
             let status = p.capture_status();
@@ -90,26 +83,43 @@ pub fn get_game_state(
     pipeline_state: State<'_, PipelineState>,
 ) -> Result<serde_json::Value, String> {
     let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-
     match &*pipeline {
-        Some(p) => {
-            if let Some(vision) = p.latest_vision() {
-                Ok(serde_json::json!({
-                    "shop": vision.shop.iter().map(|s| serde_json::json!({
-                        "index": s.slot_index,
-                        "championId": s.champion_id,
-                        "championName": s.champion_name,
-                        "cost": s.cost,
-                        "confidence": s.confidence,
-                    })).collect::<Vec<_>>(),
-                    "gold": vision.gold,
-                    "level": vision.level,
-                    "stage": vision.stage,
-                }))
-            } else {
-                Ok(serde_json::json!(null))
-            }
-        }
+        Some(p) => match p.latest_vision() {
+            Some(vision) => Ok(serde_json::json!({
+                "shop": vision.shop.iter().map(|s| serde_json::json!({
+                    "index": s.slot_index,
+                    "championId": s.champion_id,
+                    "championName": s.champion_name,
+                    "cost": s.cost,
+                    "confidence": s.confidence,
+                })).collect::<Vec<_>>(),
+                "gold": vision.gold,
+                "level": vision.level,
+                "stage": vision.stage,
+            })),
+            None => Ok(serde_json::json!(null)),
+        },
         None => Ok(serde_json::json!(null)),
     }
+}
+
+/// List all visible windows on the system
+#[tauri::command]
+pub fn list_windows() -> Result<serde_json::Value, String> {
+    let windows = tft_capture::list_windows();
+    serde_json::to_value(&windows).map_err(|e| e.to_string())
+}
+
+/// Set which window to capture. Pass null/empty to revert to auto-detection.
+#[tauri::command]
+pub fn set_target_window(
+    title: Option<String>,
+    pipeline_state: State<'_, PipelineState>,
+) -> Result<(), String> {
+    let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
+    if let Some(ref p) = *pipeline {
+        let target = title.filter(|t| !t.is_empty());
+        p.set_target_window(target);
+    }
+    Ok(())
 }

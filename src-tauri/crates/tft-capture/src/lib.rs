@@ -1,8 +1,7 @@
-use anyhow::{Context, Result};
 use image::RgbaImage;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tracing::{debug, info, warn};
@@ -22,12 +21,11 @@ pub mod regions {
     use super::ScreenRegion;
 
     /// Shop card slot. Each card is ~139px wide, ~180px tall at 1080p.
-    /// 5 cards centered horizontally, starting around x=0.284.
     pub fn shop_slot(index: usize) -> ScreenRegion {
-        let slot_width = 0.0724; // ~139px at 1920
-        let slot_height = 0.167; // ~180px at 1080
+        let slot_width = 0.0724;
+        let slot_height = 0.167;
         let start_x = 0.284;
-        let stride = 0.0755; // slot_width + ~6px gap
+        let stride = 0.0755;
         ScreenRegion {
             x: start_x + (index as f64) * stride,
             y: 0.769,
@@ -36,7 +34,6 @@ pub mod regions {
         }
     }
 
-    /// Gold counter region (yellow number near bottom-center)
     pub fn gold() -> ScreenRegion {
         ScreenRegion {
             x: 0.870,
@@ -46,7 +43,6 @@ pub mod regions {
         }
     }
 
-    /// Player level indicator (left of shop area)
     pub fn level() -> ScreenRegion {
         ScreenRegion {
             x: 0.255,
@@ -56,7 +52,6 @@ pub mod regions {
         }
     }
 
-    /// Stage indicator (top-center, e.g. "3-2")
     pub fn stage() -> ScreenRegion {
         ScreenRegion {
             x: 0.465,
@@ -91,17 +86,71 @@ impl Default for CaptureStatus {
     }
 }
 
-/// TFT window titles to search for
-const TFT_WINDOW_TITLES: &[&str] = &[
-    "league of legends (tm) client",
+/// Info about a visible window on the system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WindowInfo {
+    pub title: String,
+    pub app_name: String,
+    pub width: u32,
+    pub height: u32,
+}
+
+/// Default TFT-related window title substrings (matched case-insensitively)
+const DEFAULT_TITLE_PATTERNS: &[&str] = &[
     "league of legends",
     "riot games",
     "tft",
     "teamfight tactics",
+    "leagueclient",
 ];
 
-/// Find the TFT game window by searching window titles
-fn find_tft_window() -> Option<Window> {
+/// Shared target window title — can be set by the user to override auto-detection
+pub type TargetWindow = Arc<RwLock<Option<String>>>;
+
+/// Create a new shared target window handle
+pub fn new_target_window() -> TargetWindow {
+    Arc::new(RwLock::new(None))
+}
+
+/// Helper to safely get window metadata
+fn window_meta(window: &Window) -> (String, String, u32, u32) {
+    let title = window.title().unwrap_or_default();
+    let app_name = window.app_name().unwrap_or_default();
+    let width = window.width().unwrap_or(0);
+    let height = window.height().unwrap_or(0);
+    (title, app_name, width, height)
+}
+
+/// List all visible windows on the system
+pub fn list_windows() -> Vec<WindowInfo> {
+    let windows = match Window::all() {
+        Ok(w) => w,
+        Err(e) => {
+            warn!("Failed to enumerate windows: {}", e);
+            return Vec::new();
+        }
+    };
+
+    windows
+        .iter()
+        .filter_map(|w| {
+            let (title, app_name, width, height) = window_meta(w);
+            if title.is_empty() || width < 100 || height < 100 {
+                return None;
+            }
+            Some(WindowInfo {
+                title,
+                app_name,
+                width,
+                height,
+            })
+        })
+        .collect()
+}
+
+/// Find and capture a frame from the target window.
+/// Returns (title, frame) on success.
+fn find_and_capture(target: &TargetWindow) -> Option<(String, RgbaImage)> {
     let windows = match Window::all() {
         Ok(w) => w,
         Err(e) => {
@@ -110,28 +159,58 @@ fn find_tft_window() -> Option<Window> {
         }
     };
 
-    for window in windows {
-        let title = match window.title() {
-            Ok(t) => t.to_lowercase(),
-            Err(_) => continue,
-        };
-        if TFT_WINDOW_TITLES
-            .iter()
-            .any(|t| title.contains(t))
-        {
-            debug!("Found TFT window: {}", title);
-            return Some(window);
+    let user_target = target.read().ok().and_then(|t| t.clone());
+
+    // Find the matching window
+    let matched = if let Some(ref target_title) = user_target {
+        let target_lower = target_title.to_lowercase();
+        windows.iter().find(|w| {
+            w.title()
+                .unwrap_or_default()
+                .to_lowercase()
+                .contains(&target_lower)
+        })
+    } else {
+        // Auto-detect using known title patterns
+        windows.iter().find(|w| {
+            let title_lower = w.title().unwrap_or_default().to_lowercase();
+            DEFAULT_TITLE_PATTERNS
+                .iter()
+                .any(|p| title_lower.contains(p))
+        })
+    };
+
+    match matched {
+        Some(window) => {
+            let title = window.title().unwrap_or_default();
+            match window.capture_image() {
+                Ok(img) => {
+                    debug!("Captured window: {}", title);
+                    Some((title, img))
+                }
+                Err(e) => {
+                    warn!("Capture failed for '{}': {}", title, e);
+                    None
+                }
+            }
+        }
+        None => {
+            // Log available windows at debug level
+            let available: Vec<String> = windows
+                .iter()
+                .filter_map(|w| {
+                    let (title, _, width, height) = window_meta(w);
+                    if title.is_empty() || width < 100 || height < 100 {
+                        None
+                    } else {
+                        Some(format!("'{}' ({}x{})", title, width, height))
+                    }
+                })
+                .collect();
+            debug!("No target window found. Available: {}", available.join(", "));
+            None
         }
     }
-    None
-}
-
-/// Capture a frame from the given window
-fn capture_frame(window: &Window) -> Result<RgbaImage> {
-    let img = window
-        .capture_image()
-        .context("Failed to capture window image")?;
-    Ok(img)
 }
 
 /// Crop a region from a captured frame using normalized coordinates
@@ -142,7 +221,6 @@ pub fn crop_region(frame: &RgbaImage, region: &ScreenRegion) -> RgbaImage {
     let rw = (region.width * w as f64) as u32;
     let rh = (region.height * h as f64) as u32;
 
-    // Clamp to image bounds
     let x = x.min(w.saturating_sub(1));
     let y = y.min(h.saturating_sub(1));
     let rw = rw.min(w - x);
@@ -152,12 +230,12 @@ pub fn crop_region(frame: &RgbaImage, region: &ScreenRegion) -> RgbaImage {
 }
 
 /// The capture loop that runs as a background task.
-/// Sends frames through the watch channel and status updates through the status channel.
 pub async fn capture_loop(
     frame_tx: watch::Sender<Option<Arc<RgbaImage>>>,
     status_tx: watch::Sender<CaptureStatus>,
     capture_interval: Duration,
     stop: Arc<AtomicBool>,
+    target: TargetWindow,
 ) {
     info!("Capture loop started, interval: {:?}", capture_interval);
 
@@ -171,73 +249,50 @@ pub async fn capture_loop(
             break;
         }
 
-        // Try to find the TFT window
-        let window = find_tft_window();
+        // Find and capture the target window on a blocking thread
+        let target_clone = target.clone();
+        let capture_result =
+            tokio::task::spawn_blocking(move || find_and_capture(&target_clone)).await;
 
-        match window {
-            Some(win) => {
-                let title = win.title().unwrap_or_default();
+        match capture_result {
+            Ok(Some((title, frame))) => {
+                let resolution = (frame.width(), frame.height());
+                frame_count += 1;
 
-                // Capture frame on a blocking thread (xcap is sync)
-                let capture_result = tokio::task::spawn_blocking(move || {
-                    capture_frame(&win)
-                })
-                .await;
+                let elapsed = fps_timer.elapsed().as_secs_f64();
+                let fps = if elapsed > 0.0 {
+                    frame_count as f64 / elapsed
+                } else {
+                    0.0
+                };
 
-                match capture_result {
-                    Ok(Ok(frame)) => {
-                        let resolution = (frame.width(), frame.height());
-                        frame_count += 1;
-
-                        // Calculate FPS
-                        let elapsed = fps_timer.elapsed().as_secs_f64();
-                        let fps = if elapsed > 0.0 {
-                            frame_count as f64 / elapsed
-                        } else {
-                            0.0
-                        };
-
-                        // Reset FPS counter every 5 seconds
-                        if elapsed > 5.0 {
-                            frame_count = 0;
-                            fps_timer = Instant::now();
-                        }
-
-                        let now = std::time::SystemTime::now()
-                            .duration_since(std::time::UNIX_EPOCH)
-                            .unwrap_or_default()
-                            .as_millis() as u64;
-
-                        let _ = status_tx.send(CaptureStatus {
-                            is_capturing: true,
-                            window_found: true,
-                            window_title: Some(title),
-                            fps,
-                            last_capture_time: Some(now),
-                            resolution: Some(resolution),
-                        });
-
-                        let _ = frame_tx.send(Some(Arc::new(frame)));
-                        last_capture = Instant::now();
-                    }
-                    Ok(Err(e)) => {
-                        warn!("Capture failed: {}", e);
-                        let _ = status_tx.send(CaptureStatus {
-                            is_capturing: false,
-                            window_found: true,
-                            window_title: Some(title),
-                            fps: 0.0,
-                            last_capture_time: None,
-                            resolution: None,
-                        });
-                    }
-                    Err(e) => {
-                        warn!("Capture task panicked: {}", e);
-                    }
+                if elapsed > 5.0 {
+                    frame_count = 0;
+                    fps_timer = Instant::now();
                 }
+
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64;
+
+                let _ = status_tx.send(CaptureStatus {
+                    is_capturing: true,
+                    window_found: true,
+                    window_title: Some(title),
+                    fps,
+                    last_capture_time: Some(now),
+                    resolution: Some(resolution),
+                });
+
+                let _ = frame_tx.send(Some(Arc::new(frame)));
+                last_capture = Instant::now();
             }
-            None => {
+            Ok(None) => {
                 let _ = status_tx.send(CaptureStatus::default());
+            }
+            Err(e) => {
+                warn!("Capture task panicked: {}", e);
             }
         }
 
@@ -246,7 +301,6 @@ pub async fn capture_loop(
         if elapsed < capture_interval {
             tokio::time::sleep(capture_interval - elapsed).await;
         } else {
-            // Yield to prevent busy loop
             tokio::time::sleep(Duration::from_millis(100)).await;
         }
     }
@@ -265,7 +319,7 @@ mod tests {
             let region = regions::shop_slot(i);
             assert!(region.x >= 0.0 && region.x <= 1.0);
             assert!(region.y >= 0.0 && region.y <= 1.0);
-            assert!(region.x + region.width <= 1.01); // small tolerance
+            assert!(region.x + region.width <= 1.01);
         }
     }
 
