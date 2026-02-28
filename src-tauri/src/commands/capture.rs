@@ -103,11 +103,11 @@ pub fn get_game_state(
     }
 }
 
-/// List all visible windows on the system
+/// List all visible windows on the system, with permission diagnostics
 #[tauri::command]
 pub fn list_windows() -> Result<serde_json::Value, String> {
-    let windows = tft_capture::list_windows();
-    serde_json::to_value(&windows).map_err(|e| e.to_string())
+    let result = tft_capture::list_windows();
+    serde_json::to_value(&result).map_err(|e| e.to_string())
 }
 
 /// Set which window to capture. Pass null/empty to revert to auto-detection.

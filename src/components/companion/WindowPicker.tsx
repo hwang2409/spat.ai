@@ -7,8 +7,14 @@ interface WindowInfo {
   height: number;
 }
 
+interface WindowListResult {
+  windows: WindowInfo[];
+  raw_count: number;
+  has_permission: boolean;
+}
+
 export function WindowPicker() {
-  const [windows, setWindows] = useState<WindowInfo[]>([]);
+  const [result, setResult] = useState<WindowListResult | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +22,8 @@ export function WindowPicker() {
     setLoading(true);
     try {
       const { invoke } = await import("@tauri-apps/api/core");
-      const result = await invoke<WindowInfo[]>("list_windows");
-      setWindows(result);
+      const res = await invoke<WindowListResult>("list_windows");
+      setResult(res);
     } catch {
       // Not in Tauri
     }
@@ -38,6 +44,9 @@ export function WindowPicker() {
     }
   };
 
+  const windows = result?.windows ?? [];
+  const hasPermission = result?.has_permission ?? true;
+
   return (
     <div className="rounded-lg bg-tft-panel p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -53,10 +62,29 @@ export function WindowPicker() {
         </button>
       </div>
 
+      {!hasPermission && (
+        <div className="mb-3 rounded border border-yellow-600/40 bg-yellow-900/20 p-3">
+          <p className="text-xs font-medium text-yellow-400">
+            Screen Recording permission required
+          </p>
+          <p className="mt-1 text-[11px] text-yellow-400/70">
+            Go to System Settings &rarr; Privacy &amp; Security &rarr; Screen
+            Recording and enable it for this app. Then restart the app.
+          </p>
+          {result && (
+            <p className="mt-1 text-[10px] text-gray-500">
+              (Seeing {result.raw_count} raw window{result.raw_count !== 1 && "s"}, {windows.length} usable)
+            </p>
+          )}
+        </div>
+      )}
+
       {selectedTitle && (
         <div className="mb-2 flex items-center gap-2">
           <span className="text-xs text-green-400">Targeting:</span>
-          <span className="truncate text-xs text-gray-300">{selectedTitle}</span>
+          <span className="truncate text-xs text-gray-300">
+            {selectedTitle}
+          </span>
           <button
             onClick={() => selectWindow(null)}
             className="text-xs text-gray-500 hover:text-gray-300"
@@ -68,7 +96,11 @@ export function WindowPicker() {
 
       <div className="max-h-48 space-y-1 overflow-y-auto">
         {windows.length === 0 ? (
-          <p className="text-xs text-gray-500">No windows found</p>
+          <p className="text-xs text-gray-500">
+            {hasPermission
+              ? "No windows found"
+              : "Grant Screen Recording permission to see windows"}
+          </p>
         ) : (
           windows.map((win, i) => (
             <button

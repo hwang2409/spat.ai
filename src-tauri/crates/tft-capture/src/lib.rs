@@ -95,6 +95,16 @@ pub struct WindowInfo {
     pub height: u32,
 }
 
+/// Result of listing windows, includes diagnostic info
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WindowListResult {
+    pub windows: Vec<WindowInfo>,
+    /// Total number of windows returned by the OS (before filtering)
+    pub raw_count: usize,
+    /// Whether screen recording permission appears to be granted
+    pub has_permission: bool,
+}
+
 /// Default TFT-related window title substrings (matched case-insensitively)
 const DEFAULT_TITLE_PATTERNS: &[&str] = &[
     "league of legends",
@@ -121,17 +131,58 @@ fn window_meta(window: &Window) -> (String, String, u32, u32) {
     (title, app_name, width, height)
 }
 
-/// List all visible windows on the system
-pub fn list_windows() -> Vec<WindowInfo> {
+/// Check if screen recording permission is likely granted (macOS).
+/// On macOS, CGWindowListCopyWindowInfo returns only the caller's windows
+/// without Screen Recording permission. We detect this by checking if we
+/// can see windows from other apps.
+fn check_screen_recording_permission(windows: &[Window]) -> bool {
+    // If we can see at least a few different app names, permission is granted
+    let mut app_names = std::collections::HashSet::new();
+    for w in windows {
+        let app = w.app_name().unwrap_or_default();
+        if !app.is_empty() {
+            app_names.insert(app);
+        }
+    }
+    // If we see 3+ different apps, we almost certainly have permission
+    // If we see 0-1, we likely don't (only seeing our own app)
+    let has_perm = app_names.len() >= 3;
+    if !has_perm {
+        warn!(
+            "Screen Recording permission likely not granted. Only seeing apps: {:?}",
+            app_names
+        );
+    }
+    has_perm
+}
+
+/// List all visible windows on the system, with diagnostic info
+pub fn list_windows() -> WindowListResult {
     let windows = match Window::all() {
         Ok(w) => w,
         Err(e) => {
             warn!("Failed to enumerate windows: {}", e);
-            return Vec::new();
+            return WindowListResult {
+                windows: Vec::new(),
+                raw_count: 0,
+                has_permission: false,
+            };
         }
     };
 
-    windows
+    let raw_count = windows.len();
+    let has_permission = check_screen_recording_permission(&windows);
+
+    // Log all windows for debugging
+    for w in &windows {
+        let (title, app_name, width, height) = window_meta(w);
+        debug!(
+            "  window: '{}' app='{}' {}x{}",
+            title, app_name, width, height
+        );
+    }
+
+    let filtered: Vec<WindowInfo> = windows
         .iter()
         .filter_map(|w| {
             let (title, app_name, width, height) = window_meta(w);
@@ -145,7 +196,20 @@ pub fn list_windows() -> Vec<WindowInfo> {
                 height,
             })
         })
-        .collect()
+        .collect();
+
+    info!(
+        "Window scan: {} raw, {} visible, permission={}",
+        raw_count,
+        filtered.len(),
+        has_permission
+    );
+
+    WindowListResult {
+        windows: filtered,
+        raw_count,
+        has_permission,
+    }
 }
 
 /// Find and capture a frame from the target window.

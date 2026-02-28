@@ -13,7 +13,7 @@ export function CaptureStatusPanel() {
     ? "Capturing"
     : captureStatus.windowFound
       ? "Window Found"
-      : "Searching for TFT...";
+      : "No window selected";
 
   return (
     <div className="rounded-lg bg-tft-panel p-4">
