@@ -1,0 +1,12 @@
+[package]
+name = "tft-capture"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+xcap = "0.7"
+image = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

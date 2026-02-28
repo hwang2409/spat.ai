@@ -1,0 +1,46 @@
+[workspace]
+members = [
+    ".",
+    "crates/tft-capture",
+    "crates/tft-vision",
+    "crates/tft-state",
+    "crates/tft-advisor",
+    "crates/tft-data",
+]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+image = "0.25"
+anyhow = "1"
+
+[package]
+name = "spat-ai"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "spat_ai_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = { workspace = true }
+image = { workspace = true }
+tft-capture = { path = "crates/tft-capture" }
+tft-vision = { path = "crates/tft-vision" }
+tft-state = { path = "crates/tft-state" }
+tft-advisor = { path = "crates/tft-advisor" }
+tft-data = { path = "crates/tft-data" }
