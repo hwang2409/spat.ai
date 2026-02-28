@@ -1,0 +1,706 @@
+{
+  "version": "16.4.1",
+  "set": 16,
+  "champions": [
+    {
+      "id": "TFT16_Aatrox",
+      "name": "Aatrox ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Aatrox.png"
+    },
+    {
+      "id": "TFT16_Ahri",
+      "name": "Ahri",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Ahri.png"
+    },
+    {
+      "id": "TFT16_Ambessa",
+      "name": "Ambessa",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Ambessa.png"
+    },
+    {
+      "id": "TFT16_Anivia",
+      "name": "Anivia",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Anivia.png"
+    },
+    {
+      "id": "TFT16_Annie",
+      "name": "Annie",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Annie.png"
+    },
+    {
+      "id": "TFT16_Aphelios",
+      "name": "Aphelios",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Aphelios.png"
+    },
+    {
+      "id": "TFT16_Ashe",
+      "name": "Ashe",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Ashe.png"
+    },
+    {
+      "id": "TFT16_AurelionSol",
+      "name": "Aurelion Sol",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_AurelionSol.png"
+    },
+    {
+      "id": "TFT16_Azir",
+      "name": "Azir",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Azir.png"
+    },
+    {
+      "id": "TFT16_Bard",
+      "name": "Bard ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Bard.png"
+    },
+    {
+      "id": "TFT16_BaronNashor",
+      "name": "Baron Nashor",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_BaronNashor.png"
+    },
+    {
+      "id": "TFT16_BelVeth",
+      "name": "Bel'Veth",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_BelVeth.png"
+    },
+    {
+      "id": "TFT16_Blitzcrank",
+      "name": "Blitzcrank",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Blitzcrank.png"
+    },
+    {
+      "id": "TFT16_Braum",
+      "name": "Braum",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Braum.png"
+    },
+    {
+      "id": "TFT16_Briar",
+      "name": "Briar",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Briar.png"
+    },
+    {
+      "id": "TFT16_Brock",
+      "name": "Brock",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Brock.png"
+    },
+    {
+      "id": "TFT16_Caitlyn",
+      "name": "Caitlyn",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Caitlyn.png"
+    },
+    {
+      "id": "TFT16_ChoGath",
+      "name": "Cho'Gath",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_ChoGath.png"
+    },
+    {
+      "id": "TFT16_Darius",
+      "name": "Darius",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Darius.png"
+    },
+    {
+      "id": "TFT16_Diana",
+      "name": "Diana ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Diana.png"
+    },
+    {
+      "id": "TFT16_DrMundo",
+      "name": "Dr. Mundo",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_DrMundo.png"
+    },
+    {
+      "id": "TFT16_Draven",
+      "name": "Draven",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Draven.png"
+    },
+    {
+      "id": "TFT16_Ekko",
+      "name": "Ekko",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Ekko.png"
+    },
+    {
+      "id": "TFT16_Fiddlesticks",
+      "name": "Fiddlesticks",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Fiddlesticks.png"
+    },
+    {
+      "id": "TFT16_Fizz",
+      "name": "Fizz",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Fizz.png"
+    },
+    {
+      "id": "TFT16_Galio",
+      "name": "Galio",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Galio.png"
+    },
+    {
+      "id": "TFT16_Gangplank",
+      "name": "Gangplank",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Gangplank.png"
+    },
+    {
+      "id": "TFT16_Garen",
+      "name": "Garen",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Garen.png"
+    },
+    {
+      "id": "TFT16_Graves",
+      "name": "Graves ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Graves.png"
+    },
+    {
+      "id": "TFT16_Gwen",
+      "name": "Gwen ",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Gwen.png"
+    },
+    {
+      "id": "TFT16_Illaoi",
+      "name": "Illaoi",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Illaoi.png"
+    },
+    {
+      "id": "TFT16_JarvanIV",
+      "name": "Jarvan IV",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_JarvanIV.png"
+    },
+    {
+      "id": "TFT16_Jhin",
+      "name": "Jhin",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Jhin.png"
+    },
+    {
+      "id": "TFT16_Jinx",
+      "name": "Jinx",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Jinx.png"
+    },
+    {
+      "id": "TFT16_Kaisa",
+      "name": "Kai'Sa ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Kaisa.png"
+    },
+    {
+      "id": "TFT16_Kalista",
+      "name": "Kalista ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Kalista.png"
+    },
+    {
+      "id": "TFT16_Kennen",
+      "name": "Kennen ",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Kennen.png"
+    },
+    {
+      "id": "TFT16_Kindred",
+      "name": "Kindred",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Kindred.png"
+    },
+    {
+      "id": "TFT16_Kobuko",
+      "name": "Kobuko & Yuumi",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Kobuko.png"
+    },
+    {
+      "id": "TFT16_KogMaw",
+      "name": "Kog'Maw",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_KogMaw.png"
+    },
+    {
+      "id": "TFT16_Leblanc",
+      "name": "LeBlanc ",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Leblanc.png"
+    },
+    {
+      "id": "TFT16_Leona",
+      "name": "Leona",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Leona.png"
+    },
+    {
+      "id": "TFT16_Lissandra",
+      "name": "Lissandra",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Lissandra.png"
+    },
+    {
+      "id": "TFT16_Loris",
+      "name": "Loris",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Loris.png"
+    },
+    {
+      "id": "TFT16_Lucian",
+      "name": "Lucian & Senna",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Lucian.png"
+    },
+    {
+      "id": "TFT16_Lulu",
+      "name": "Lulu",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Lulu.png"
+    },
+    {
+      "id": "TFT16_Lux",
+      "name": "Lux",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Lux.png"
+    },
+    {
+      "id": "TFT16_Malzahar",
+      "name": "Malzahar",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Malzahar.png"
+    },
+    {
+      "id": "TFT16_Mel",
+      "name": "Mel ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Mel.png"
+    },
+    {
+      "id": "TFT16_Milio",
+      "name": "Milio",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Milio.png"
+    },
+    {
+      "id": "TFT16_MissFortune",
+      "name": "Miss Fortune",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_MissFortune.png"
+    },
+    {
+      "id": "TFT16_Nasus",
+      "name": "Nasus ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Nasus.png"
+    },
+    {
+      "id": "TFT16_Nautilus",
+      "name": "Nautilus",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Nautilus.png"
+    },
+    {
+      "id": "TFT16_Neeko",
+      "name": "Neeko",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Neeko.png"
+    },
+    {
+      "id": "TFT16_Nidalee",
+      "name": "Nidalee ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Nidalee.png"
+    },
+    {
+      "id": "TFT16_Orianna",
+      "name": "Orianna ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Orianna.png"
+    },
+    {
+      "id": "TFT16_Ornn",
+      "name": "Ornn",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Ornn.png"
+    },
+    {
+      "id": "TFT16_Poppy",
+      "name": "Poppy ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Poppy.png"
+    },
+    {
+      "id": "TFT16_Qiyana",
+      "name": "Qiyana",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Qiyana.png"
+    },
+    {
+      "id": "TFT16_RekSai",
+      "name": "Rek'Sai",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_RekSai.png"
+    },
+    {
+      "id": "TFT16_Renekton",
+      "name": "Renekton ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Renekton.png"
+    },
+    {
+      "id": "TFT16_RiftHerald",
+      "name": "Rift Herald ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_RiftHerald.png"
+    },
+    {
+      "id": "TFT16_Rumble",
+      "name": "Rumble",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Rumble.png"
+    },
+    {
+      "id": "TFT16_Ryze",
+      "name": "Ryze ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Ryze.png"
+    },
+    {
+      "id": "TFT16_Sejuani",
+      "name": "Sejuani",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Sejuani.png"
+    },
+    {
+      "id": "TFT16_Seraphine",
+      "name": "Seraphine",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Seraphine.png"
+    },
+    {
+      "id": "TFT16_Sett",
+      "name": "Sett",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Sett.png"
+    },
+    {
+      "id": "TFT16_Shen",
+      "name": "Shen",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Shen.png"
+    },
+    {
+      "id": "TFT16_Shyvana",
+      "name": "Shyvana",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Shyvana.png"
+    },
+    {
+      "id": "TFT16_Singed",
+      "name": "Singed",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Singed.png"
+    },
+    {
+      "id": "TFT16_Sion",
+      "name": "Sion",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Sion.png"
+    },
+    {
+      "id": "TFT16_Skarner",
+      "name": "Skarner ",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Skarner.png"
+    },
+    {
+      "id": "TFT16_Sona",
+      "name": "Sona",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Sona.png"
+    },
+    {
+      "id": "TFT16_Swain",
+      "name": "Swain",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Swain.png"
+    },
+    {
+      "id": "TFT16_Sylas",
+      "name": "Sylas ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Sylas.png"
+    },
+    {
+      "id": "TFT16_THex",
+      "name": "T-Hex",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_THex.png"
+    },
+    {
+      "id": "TFT16_TahmKench",
+      "name": "Tahm Kench",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_TahmKench.png"
+    },
+    {
+      "id": "TFT16_Taric",
+      "name": "Taric",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Taric.png"
+    },
+    {
+      "id": "TFT16_Teemo",
+      "name": "Teemo",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Teemo.png"
+    },
+    {
+      "id": "TFT16_Thresh",
+      "name": "Thresh ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Thresh.png"
+    },
+    {
+      "id": "TFT16_Tristana",
+      "name": "Tristana",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Tristana.png"
+    },
+    {
+      "id": "TFT16_Tryndamere",
+      "name": "Tryndamere ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Tryndamere.png"
+    },
+    {
+      "id": "TFT16_TwistedFate",
+      "name": "Twisted Fate",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_TwistedFate.png"
+    },
+    {
+      "id": "TFT16_Vayne",
+      "name": "Vayne",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Vayne.png"
+    },
+    {
+      "id": "TFT16_Veigar",
+      "name": "Veigar",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Veigar.png"
+    },
+    {
+      "id": "TFT16_Vi",
+      "name": "Vi",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Vi.png"
+    },
+    {
+      "id": "TFT16_Viego",
+      "name": "Viego",
+      "cost": 1,
+      "traits": [],
+      "icon": "TFT16_Viego.png"
+    },
+    {
+      "id": "TFT16_Volibear",
+      "name": "Volibear ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Volibear.png"
+    },
+    {
+      "id": "TFT16_Warwick",
+      "name": "Warwick",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Warwick.png"
+    },
+    {
+      "id": "TFT16_Wukong",
+      "name": "Wukong",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Wukong.png"
+    },
+    {
+      "id": "TFT16_Xerath",
+      "name": "Xerath ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Xerath.png"
+    },
+    {
+      "id": "TFT16_XinZhao",
+      "name": "Xin Zhao",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_XinZhao.png"
+    },
+    {
+      "id": "TFT16_Yasuo",
+      "name": "Yasuo",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Yasuo.png"
+    },
+    {
+      "id": "TFT16_Yone",
+      "name": "Yone",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Yone.png"
+    },
+    {
+      "id": "TFT16_Yorick",
+      "name": "Yorick ",
+      "cost": 2,
+      "traits": [],
+      "icon": "TFT16_Yorick.png"
+    },
+    {
+      "id": "TFT16_Yunara",
+      "name": "Yunara",
+      "cost": 4,
+      "traits": [],
+      "icon": "TFT16_Yunara.png"
+    },
+    {
+      "id": "TFT16_Zaahen",
+      "name": "Zaahen",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Zaahen.png"
+    },
+    {
+      "id": "TFT16_Ziggs",
+      "name": "Ziggs ",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Ziggs.png"
+    },
+    {
+      "id": "TFT16_Zilean",
+      "name": "Zilean",
+      "cost": 5,
+      "traits": [],
+      "icon": "TFT16_Zilean.png"
+    },
+    {
+      "id": "TFT16_Zoe",
+      "name": "Zoe",
+      "cost": 3,
+      "traits": [],
+      "icon": "TFT16_Zoe.png"
+    }
+  ]
+}

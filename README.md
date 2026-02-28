@@ -12,7 +12,7 @@ Uses a hybrid AI approach: a rule-based engine for instant advice + Claude API f
 Screen Capture (xcap) → CV Pipeline (template matching + OCR) → Game State → Advisor (rules + LLM) → UI (overlay + companion)
 ```
 
-**Tech stack**: Tauri 2.0 (Rust backend, React/TypeScript frontend), `xcap` for cross-platform capture, `imageproc` for template matching, `leptess` for OCR, Claude API for contextual advice.
+**Tech stack**: Tauri 2.0 (Rust backend, React/TypeScript frontend), `xcap` for cross-platform capture, normalized cross-correlation for template matching, Tesseract CLI for OCR, Claude API for contextual advice.
 
 ## Project Structure
 
@@ -49,6 +49,7 @@ tft/
 - [Rust](https://rustup.rs/) (1.70+)
 - [Node.js](https://nodejs.org/) (18+)
 - [Tauri CLI](https://tauri.app/): `cargo install tauri-cli --version "^2"`
+- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) (optional, for gold/level/stage reading): `brew install tesseract`
 - macOS: Xcode Command Line Tools (`xcode-select --install`)
 - Windows: [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
@@ -57,6 +58,9 @@ tft/
 ```bash
 # Install frontend dependencies
 npm install
+
+# Download champion data + icons from Riot Data Dragon
+python3 scripts/fetch-templates.py
 
 # Run in development mode
 cargo tauri dev
@@ -79,17 +83,17 @@ Screen positions are defined as normalized coordinates (0.0–1.0) relative to t
 
 | Region | Purpose |
 |--------|---------|
-| Shop (5 slots) | y≈0.94, x from 0.25 to 0.77 |
-| Gold | (0.45, 0.82) |
-| Level | (0.22, 0.95) |
-| Stage | (0.47, 0.0) |
+| Shop (5 slots) | y≈0.77, x from 0.28 to 0.66 |
+| Gold | (0.87, 0.88) |
+| Level | (0.26, 0.89) |
+| Stage | (0.47, 0.01) |
 
 ## Implementation Status
 
 - [x] **Phase 0** — Project scaffolding (Tauri + Cargo workspace + React frontend)
 - [x] **Phase 1** — Screen capture (`xcap`, window detection, capture loop)
-- [ ] **Phase 2** — Shop champion recognition (template matching)
-- [ ] **Phase 3** — Gold/level/stage OCR
+- [x] **Phase 2** — Shop champion recognition (NCC template matching, 100 champion templates)
+- [x] **Phase 3** — Gold/level/stage OCR (Tesseract CLI, graceful fallback)
 - [ ] **Phase 4** — Rule engine + shop/econ advice
 - [ ] **Phase 5** — Item recognition + recommendations
 - [ ] **Phase 6** — Overlay window

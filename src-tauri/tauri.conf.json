@@ -10,6 +10,7 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "companion",
@@ -21,7 +22,7 @@
       },
       {
         "label": "overlay",
-        "title": "TFT Overlay",
+        "title": "spat.ai overlay",
         "width": 300,
         "height": 200,
         "resizable": false,

@@ -4981,6 +4981,7 @@ dependencies = [
  "anyhow",
  "serde",
  "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -5000,6 +5001,8 @@ dependencies = [
  "anyhow",
  "image",
  "serde",
+ "tft-capture",
+ "tft-data",
  "tracing",
 ]
 

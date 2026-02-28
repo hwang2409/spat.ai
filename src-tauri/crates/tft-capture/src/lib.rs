@@ -21,42 +21,48 @@ pub struct ScreenRegion {
 pub mod regions {
     use super::ScreenRegion;
 
+    /// Shop card slot. Each card is ~139px wide, ~180px tall at 1080p.
+    /// 5 cards centered horizontally, starting around x=0.284.
     pub fn shop_slot(index: usize) -> ScreenRegion {
-        let slot_width = 0.104;
-        let start_x = 0.252;
-        let gap = 0.0;
+        let slot_width = 0.0724; // ~139px at 1920
+        let slot_height = 0.167; // ~180px at 1080
+        let start_x = 0.284;
+        let stride = 0.0755; // slot_width + ~6px gap
         ScreenRegion {
-            x: start_x + (index as f64) * (slot_width + gap),
-            y: 0.935,
+            x: start_x + (index as f64) * stride,
+            y: 0.769,
             width: slot_width,
-            height: 0.055,
+            height: slot_height,
         }
     }
 
+    /// Gold counter region (yellow number near bottom-center)
     pub fn gold() -> ScreenRegion {
         ScreenRegion {
-            x: 0.45,
-            y: 0.82,
-            width: 0.03,
-            height: 0.02,
+            x: 0.870,
+            y: 0.880,
+            width: 0.035,
+            height: 0.025,
         }
     }
 
+    /// Player level indicator (left of shop area)
     pub fn level() -> ScreenRegion {
         ScreenRegion {
-            x: 0.22,
-            y: 0.95,
-            width: 0.02,
-            height: 0.02,
+            x: 0.255,
+            y: 0.890,
+            width: 0.020,
+            height: 0.025,
         }
     }
 
+    /// Stage indicator (top-center, e.g. "3-2")
     pub fn stage() -> ScreenRegion {
         ScreenRegion {
-            x: 0.47,
-            y: 0.0,
-            width: 0.06,
-            height: 0.03,
+            x: 0.465,
+            y: 0.005,
+            width: 0.070,
+            height: 0.030,
         }
     }
 }

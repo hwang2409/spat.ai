@@ -8,3 +8,5 @@ image = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
+tft-data = { path = "../tft-data" }
+tft-capture = { path = "../tft-capture" }

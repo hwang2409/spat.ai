@@ -5,6 +5,9 @@ target/
 *.log
 .DS_Store
 
+# Downloaded template images (regenerate with scripts/fetch-templates.py)
+data/templates/
+
 # Tauri build artifacts
 src-tauri/target/
 src-tauri/gen/

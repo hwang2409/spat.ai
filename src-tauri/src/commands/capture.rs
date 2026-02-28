@@ -1,6 +1,7 @@
 use crate::pipeline::Pipeline;
+use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 
 pub struct PipelineState(pub Mutex<Option<Pipeline>>);
 
@@ -15,7 +16,37 @@ pub fn start_capture(
         return Ok(()); // Already running
     }
 
-    let p = Pipeline::start(app_handle, 500); // 2 FPS
+    // Resolve the data directory relative to the app's resource directory
+    let data_dir = app_handle
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|p| p.join("data"))
+        .unwrap_or_else(|| {
+            // Fallback: look for data/ relative to the executable or CWD
+            let exe_dir = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|p| p.to_path_buf()));
+            if let Some(dir) = exe_dir {
+                // In dev mode, the executable is in src-tauri/target/debug/
+                // Data is at the project root
+                let project_root = dir
+                    .parent()
+                    .and_then(|p| p.parent())
+                    .and_then(|p| p.parent());
+                if let Some(root) = project_root {
+                    let data = root.join("data");
+                    if data.exists() {
+                        return data;
+                    }
+                }
+            }
+            PathBuf::from("data")
+        });
+
+    tracing::info!("Data directory: {}", data_dir.display());
+
+    let p = Pipeline::start(app_handle, 500, data_dir); // 2 FPS
     *pipeline = Some(p);
 
     Ok(())
@@ -44,12 +75,41 @@ pub fn get_capture_status(
             serde_json::to_value(&status).map_err(|e| e.to_string())
         }
         None => Ok(serde_json::json!({
-            "is_capturing": false,
-            "window_found": false,
-            "window_title": null,
+            "isCapturing": false,
+            "windowFound": false,
+            "windowTitle": null,
             "fps": 0.0,
-            "last_capture_time": null,
+            "lastCaptureTime": null,
             "resolution": null,
         })),
+    }
+}
+
+#[tauri::command]
+pub fn get_game_state(
+    pipeline_state: State<'_, PipelineState>,
+) -> Result<serde_json::Value, String> {
+    let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
+
+    match &*pipeline {
+        Some(p) => {
+            if let Some(vision) = p.latest_vision() {
+                Ok(serde_json::json!({
+                    "shop": vision.shop.iter().map(|s| serde_json::json!({
+                        "index": s.slot_index,
+                        "championId": s.champion_id,
+                        "championName": s.champion_name,
+                        "cost": s.cost,
+                        "confidence": s.confidence,
+                    })).collect::<Vec<_>>(),
+                    "gold": vision.gold,
+                    "level": vision.level,
+                    "stage": vision.stage,
+                }))
+            } else {
+                Ok(serde_json::json!(null))
+            }
+        }
+        None => Ok(serde_json::json!(null)),
     }
 }
