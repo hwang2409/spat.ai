@@ -1,47 +1,51 @@
 # spat.ai
 
-A desktop application that assists Teamfight Tactics players during live gameplay. Captures the game screen, uses computer vision to recognize the board state (champions, items, gold, level), and provides real-time guidance on compositions, items, and economy decisions.
-
-Uses a hybrid AI approach: a rule-based engine for instant advice + Claude API for contextual strategic guidance.
+A desktop application that assists Teamfight Tactics players during live gameplay. Captures the game screen (or analyzes a video recording), uses computer vision to recognize the board state (champions, gold, level, stage), and provides real-time guidance.
 
 > Named after the Spatula — the most iconic item in TFT.
 
 ## Architecture
 
 ```
-Screen Capture (xcap) → CV Pipeline (template matching + OCR) → Game State → Advisor (rules + LLM) → UI (overlay + companion)
+Frame source ──► Vision pipeline ──► Game state ──► UI
+(xcap / video)   (template match     (watch           (React +
+                  + Tesseract OCR)    channels)        Tauri)
 ```
 
-**Tech stack**: Tauri 2.0 (Rust backend, React/TypeScript frontend), `xcap` for cross-platform capture, normalized cross-correlation for template matching, Tesseract CLI for OCR, Claude API for contextual advice.
+The vision pipeline is **source-agnostic** — it receives `RgbaImage` frames from either live screen capture or video file decode and processes them identically:
+
+- **Dynamic layout detection** finds UI elements (shop cards, gold, level, stage) by analyzing frame content rather than hardcoding pixel coordinates
+- **Champion recognition** via normalized cross-correlation against 102 Set 16 champion icon templates
+- **OCR** via Tesseract CLI for gold, level, and stage readout
+
+**Tech stack**: Tauri 2.0 (Rust backend, React/TypeScript frontend), `xcap` for screen capture, `ffmpeg-next` for video decode, Tesseract CLI for OCR, Zustand for state management.
 
 ## Project Structure
 
 ```
-tft/
-├── src/                              # React/TypeScript frontend
-│   ├── App.tsx                       # Root component, window routing
-│   ├── types/                        # Game state + advice types
-│   ├── hooks/                        # Zustand stores + event listeners
-│   └── components/
-│       ├── overlay/                  # Transparent always-on-top panel
-│       └── companion/               # Full dashboard window
-├── src-tauri/                        # Rust backend
-│   ├── src/
-│   │   ├── lib.rs                    # Tauri setup + command registration
-│   │   ├── pipeline.rs              # Capture → CV → state → advice loop
-│   │   └── commands/                # Tauri IPC commands
-│   └── crates/
-│       ├── tft-capture/             # Screen capture (xcap)
-│       ├── tft-vision/              # CV: template matching + OCR
-│       ├── tft-state/               # Game state model
-│       ├── tft-advisor/             # Rule engine + LLM advisor
-│       └── tft-data/               # Static game data (Data Dragon)
-├── data/
-│   ├── templates/{champions,items}/ # Icon templates for CV matching
-│   └── meta/comps.json             # Meta composition definitions
-└── scripts/
-    ├── fetch-templates.py           # Download icons from Data Dragon
-    └── update-meta.py               # Update meta comp data
+src/                              React/TypeScript frontend
+  components/companion/           Main dashboard (status, shop, economy, video loader)
+  components/overlay/             Transparent always-on-top overlay (WIP)
+  hooks/                          Zustand stores + Tauri event listeners
+
+src-tauri/                        Rust backend
+  src/pipeline.rs                 Capture → vision → state → frontend orchestration
+  src/commands/capture.rs         Tauri IPC commands
+  crates/
+    tft-capture/                  Screen capture (xcap) + video file decode (ffmpeg)
+    tft-vision/                   Template matching, OCR, dynamic layout detection
+    tft-state/                    Game state data structures
+    tft-advisor/                  Advice engine (placeholder)
+    tft-data/                     Champion metadata + static game data
+
+data/
+  champions.json                  Champion metadata (Set 16)
+  templates/champions/            102 champion icon PNGs
+  meta/comps.json                 Meta composition data
+
+scripts/
+  fetch-templates.py              Download champion data from Riot Data Dragon
+  update-meta.py                  Update meta compositions
 ```
 
 ## Prerequisites
@@ -49,9 +53,11 @@ tft/
 - [Rust](https://rustup.rs/) (1.70+)
 - [Node.js](https://nodejs.org/) (18+)
 - [Tauri CLI](https://tauri.app/): `cargo install tauri-cli --version "^2"`
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) (optional, for gold/level/stage reading): `brew install tesseract`
 - macOS: Xcode Command Line Tools (`xcode-select --install`)
-- Windows: [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+
+```bash
+brew install ffmpeg pkg-config tesseract
+```
 
 ## Getting Started
 
@@ -69,31 +75,34 @@ cargo tauri dev
 cargo tauri build
 ```
 
-## How It Works
+## Usage
 
-1. **Screen Capture**: Finds the TFT game window by title and captures frames at ~2 FPS using `xcap`
-2. **Computer Vision**: Crops known screen regions (shop, board, gold/level) and matches against champion/item icon templates
-3. **Game State**: Assembles recognized data into a structured game state, tracking changes over time
-4. **Advisor**: A rule engine scores your board against meta compositions and recommends shop actions, item builds, and economy decisions. Optionally calls Claude API for deeper strategic insight.
-5. **UI**: A companion window shows the full dashboard; a transparent overlay sits alongside the game with compact advice
+### Live screen capture
 
-## Screen Regions
+The app auto-detects the TFT game window by title. Use the **Window Picker** to manually select a different window if needed.
 
-Screen positions are defined as normalized coordinates (0.0–1.0) relative to the game window, so they scale to any resolution:
+On macOS, Screen Recording permission must be granted to the app.
 
-| Region | Purpose |
-|--------|---------|
-| Shop (5 slots) | y≈0.77, x from 0.28 to 0.66 |
-| Gold | (0.87, 0.88) |
-| Level | (0.26, 0.89) |
-| Stage | (0.47, 0.01) |
+### Video file analysis
+
+Click **Load Video** in the companion window to open a TFT gameplay recording (mp4, mkv, mov, webm, avi). The video is decoded via ffmpeg and fed through the same vision pipeline as live capture. The status panel shows `[Video] filename.mp4` while processing.
+
+### Debugging vision output
+
+```bash
+# Analyze a single screenshot from the CLI
+cargo run -p tft-vision --bin analyze_frame -- screenshot.png
+```
+
+Or use the debug button in the app — it saves the current frame and all detected region crops to `/tmp/spat_ai_debug/`.
 
 ## Implementation Status
 
 - [x] **Phase 0** — Project scaffolding (Tauri + Cargo workspace + React frontend)
 - [x] **Phase 1** — Screen capture (`xcap`, window detection, capture loop)
-- [x] **Phase 2** — Shop champion recognition (NCC template matching, 100 champion templates)
+- [x] **Phase 2** — Shop champion recognition (NCC template matching, 102 champion templates)
 - [x] **Phase 3** — Gold/level/stage OCR (Tesseract CLI, graceful fallback)
+- [x] **Phase 3.5** — Video file analysis (ffmpeg decode, same pipeline)
 - [ ] **Phase 4** — Rule engine + shop/econ advice
 - [ ] **Phase 5** — Item recognition + recommendations
 - [ ] **Phase 6** — Overlay window

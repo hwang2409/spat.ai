@@ -32,6 +32,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
@@ -39,7 +40,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = { workspace = true }
 image = { workspace = true }
-tft-capture = { path = "crates/tft-capture" }
+tft-capture = { path = "crates/tft-capture", features = ["video"] }
 tft-vision = { path = "crates/tft-vision" }
 tft-state = { path = "crates/tft-state" }
 tft-advisor = { path = "crates/tft-advisor" }

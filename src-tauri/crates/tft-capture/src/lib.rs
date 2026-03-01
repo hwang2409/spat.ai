@@ -1,3 +1,6 @@
+#[cfg(feature = "video")]
+pub mod video;
+
 use image::RgbaImage;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};

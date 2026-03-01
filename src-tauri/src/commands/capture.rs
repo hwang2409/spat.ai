@@ -1,22 +1,13 @@
 use crate::pipeline::Pipeline;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{Manager, State};
 
 pub struct PipelineState(pub Mutex<Option<Pipeline>>);
 
-#[tauri::command]
-pub fn start_capture(
-    app_handle: tauri::AppHandle,
-    pipeline_state: State<'_, PipelineState>,
-) -> Result<(), String> {
-    let mut pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-
-    if pipeline.is_some() {
-        return Ok(());
-    }
-
-    let data_dir = app_handle
+/// Resolve the data directory for vision assets
+fn resolve_data_dir(app_handle: &tauri::AppHandle) -> PathBuf {
+    app_handle
         .path()
         .resource_dir()
         .ok()
@@ -38,8 +29,21 @@ pub fn start_capture(
                 }
             }
             PathBuf::from("data")
-        });
+        })
+}
 
+#[tauri::command]
+pub fn start_capture(
+    app_handle: tauri::AppHandle,
+    pipeline_state: State<'_, PipelineState>,
+) -> Result<(), String> {
+    let mut pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
+
+    if pipeline.is_some() {
+        return Ok(());
+    }
+
+    let data_dir = resolve_data_dir(&app_handle);
     tracing::info!("Data directory: {}", data_dir.display());
 
     let p = Pipeline::start(app_handle, 500, data_dir);
@@ -110,6 +114,19 @@ pub fn list_windows() -> Result<serde_json::Value, String> {
     serde_json::to_value(&result).map_err(|e| e.to_string())
 }
 
+/// Save the current frame and region crops for debugging.
+/// Returns the path to the debug directory.
+#[tauri::command]
+pub fn save_debug_frame(
+    pipeline_state: State<'_, PipelineState>,
+) -> Result<Option<String>, String> {
+    let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
+    match &*pipeline {
+        Some(p) => Ok(p.save_debug_frame().map(|p| p.to_string_lossy().to_string())),
+        None => Ok(None),
+    }
+}
+
 /// Set which window to capture. Pass null/empty to revert to auto-detection.
 #[tauri::command]
 pub fn set_target_window(
@@ -121,5 +138,33 @@ pub fn set_target_window(
         let target = title.filter(|t| !t.is_empty());
         p.set_target_window(target);
     }
+    Ok(())
+}
+
+/// Start video file analysis — decodes a video and feeds frames through the vision pipeline.
+#[tauri::command]
+pub fn start_video_analysis(
+    app_handle: tauri::AppHandle,
+    path: String,
+    pipeline_state: State<'_, PipelineState>,
+) -> Result<(), String> {
+    let mut pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
+
+    // Stop existing pipeline if running
+    if let Some(ref p) = *pipeline {
+        p.stop();
+    }
+
+    let video_path = Path::new(&path);
+    if !video_path.exists() {
+        return Err(format!("Video file not found: {}", path));
+    }
+
+    let data_dir = resolve_data_dir(&app_handle);
+    tracing::info!("Starting video analysis: {}", path);
+
+    let p = Pipeline::start_video(app_handle, video_path.to_path_buf(), 500, data_dir);
+    *pipeline = Some(p);
+
     Ok(())
 }

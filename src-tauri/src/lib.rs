@@ -14,6 +14,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(PipelineState(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             commands::start_capture,
@@ -22,6 +23,8 @@ pub fn run() {
             commands::get_game_state,
             commands::list_windows,
             commands::set_target_window,
+            commands::save_debug_frame,
+            commands::start_video_analysis,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
