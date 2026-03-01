@@ -1,7 +1,22 @@
+import { useState } from "react";
 import { useGameState } from "../../hooks";
 
 export function CaptureStatusPanel() {
   const captureStatus = useGameState((s) => s.captureStatus);
+  const [debugPath, setDebugPath] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const saveDebugFrame = async () => {
+    setSaving(true);
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const path = await invoke<string | null>("save_debug_frame");
+      setDebugPath(path);
+    } catch {
+      // Not in Tauri
+    }
+    setSaving(false);
+  };
 
   const statusColor = captureStatus.isCapturing
     ? "bg-green-500"
@@ -48,6 +63,23 @@ export function CaptureStatusPanel() {
         <div className="mt-1 text-xs text-gray-400">
           Last capture:{" "}
           {new Date(captureStatus.lastCaptureTime).toLocaleTimeString()}
+        </div>
+      )}
+
+      {captureStatus.isCapturing && (
+        <div className="mt-3 border-t border-gray-700 pt-3">
+          <button
+            onClick={saveDebugFrame}
+            disabled={saving}
+            className="rounded bg-tft-accent px-3 py-1.5 text-xs text-gray-300 hover:bg-tft-accent/80 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Debug Frame"}
+          </button>
+          {debugPath && (
+            <div className="mt-1 text-[10px] text-gray-500 break-all">
+              Saved to: {debugPath}
+            </div>
+          )}
         </div>
       )}
     </div>

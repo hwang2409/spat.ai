@@ -3,15 +3,10 @@ name = "tft-capture"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = []
-video = ["ffmpeg-next"]
-
 [dependencies]
-xcap = "0.7"
 image = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
-ffmpeg-next = { version = "8", optional = true }
+ffmpeg-next = "8"

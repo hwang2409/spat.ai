@@ -17,12 +17,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(PipelineState(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
-            commands::start_capture,
             commands::stop_capture,
             commands::get_capture_status,
             commands::get_game_state,
-            commands::list_windows,
-            commands::set_target_window,
             commands::save_debug_frame,
             commands::start_video_analysis,
         ])

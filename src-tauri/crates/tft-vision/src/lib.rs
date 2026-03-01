@@ -1,8 +1,12 @@
 mod champion_matcher;
 mod digit_reader;
+pub mod game_area;
+pub mod layout;
 
 pub use champion_matcher::{ChampionMatcher, MatchResult};
 pub use digit_reader::DigitReader;
+pub use game_area::{detect_game_area, GameArea};
+pub use layout::{detect_layout, DetectedLayout};
 
 use image::RgbaImage;
 use serde::{Deserialize, Serialize};
@@ -25,7 +29,8 @@ pub struct ShopSlotResult {
     pub confidence: f64,
 }
 
-/// Run the full vision pipeline on a captured frame
+/// Run the full vision pipeline on a captured frame.
+/// Dynamically detects UI element positions instead of using fixed coordinates.
 pub fn process_frame(
     frame: &RgbaImage,
     matcher: &ChampionMatcher,
@@ -33,15 +38,14 @@ pub fn process_frame(
 ) -> VisionResult {
     let (w, h) = (frame.width(), frame.height());
 
-    // Process shop slots
+    // Dynamically detect UI layout
+    let layout = detect_layout(frame);
+
+    // Process shop slots from detected positions
     let mut shop = Vec::with_capacity(5);
-    for i in 0..5 {
-        let region = tft_capture::regions::shop_slot(i);
-        let crop = tft_capture::crop_region(frame, &region);
-
-        // Extract portrait area from the shop card (center portion)
+    for (i, region) in layout.shop_slots.iter().enumerate() {
+        let crop = tft_capture::crop_region(frame, region);
         let portrait = extract_portrait(&crop);
-
         let result = matcher.match_champion(&portrait);
         shop.push(ShopSlotResult {
             slot_index: i,
@@ -52,27 +56,34 @@ pub fn process_frame(
         });
     }
 
-    // OCR for gold, level, stage
-    let gold_region = tft_capture::regions::gold();
-    let gold_crop = tft_capture::crop_region(frame, &gold_region);
-    let gold = digit_reader.read_number(&gold_crop);
+    // OCR using detected regions
+    let gold = layout.gold.as_ref().and_then(|r| {
+        let crop = tft_capture::crop_region(frame, r);
+        tracing::debug!("Gold crop: {}x{}", crop.width(), crop.height());
+        digit_reader.read_number(&crop)
+    });
 
-    let level_region = tft_capture::regions::level();
-    let level_crop = tft_capture::crop_region(frame, &level_region);
-    let level = digit_reader.read_number(&level_crop);
+    let level = layout.level.as_ref().and_then(|r| {
+        let crop = tft_capture::crop_region(frame, r);
+        tracing::debug!("Level crop: {}x{}", crop.width(), crop.height());
+        digit_reader.read_number(&crop)
+    });
 
-    let stage_region = tft_capture::regions::stage();
-    let stage_crop = tft_capture::crop_region(frame, &stage_region);
-    let stage = digit_reader.read_stage(&stage_crop);
+    let stage = layout.stage.as_ref().and_then(|r| {
+        let crop = tft_capture::crop_region(frame, r);
+        tracing::debug!("Stage crop: {}x{}", crop.width(), crop.height());
+        digit_reader.read_stage(&crop)
+    });
 
     tracing::debug!(
-        "Vision: {} shop slots processed, gold={:?}, level={:?}, stage={:?} (frame {}x{})",
+        "Vision: {} shop slots, gold={:?}, level={:?}, stage={:?} (frame {}x{}, hud_top={:.1}%)",
         shop.len(),
         gold,
         level,
         stage,
         w,
         h,
+        layout.hud_top * 100.0,
     );
 
     VisionResult {

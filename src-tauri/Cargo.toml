@@ -40,7 +40,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = { workspace = true }
 image = { workspace = true }
-tft-capture = { path = "crates/tft-capture", features = ["video"] }
+tft-capture = { path = "crates/tft-capture" }
 tft-vision = { path = "crates/tft-vision" }
 tft-state = { path = "crates/tft-state" }
 tft-advisor = { path = "crates/tft-advisor" }

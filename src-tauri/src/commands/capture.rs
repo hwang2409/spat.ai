@@ -33,26 +33,6 @@ fn resolve_data_dir(app_handle: &tauri::AppHandle) -> PathBuf {
 }
 
 #[tauri::command]
-pub fn start_capture(
-    app_handle: tauri::AppHandle,
-    pipeline_state: State<'_, PipelineState>,
-) -> Result<(), String> {
-    let mut pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-
-    if pipeline.is_some() {
-        return Ok(());
-    }
-
-    let data_dir = resolve_data_dir(&app_handle);
-    tracing::info!("Data directory: {}", data_dir.display());
-
-    let p = Pipeline::start(app_handle, 500, data_dir);
-    *pipeline = Some(p);
-
-    Ok(())
-}
-
-#[tauri::command]
 pub fn stop_capture(pipeline_state: State<'_, PipelineState>) -> Result<(), String> {
     let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
     if let Some(ref p) = *pipeline {
@@ -107,13 +87,6 @@ pub fn get_game_state(
     }
 }
 
-/// List all visible windows on the system, with permission diagnostics
-#[tauri::command]
-pub fn list_windows() -> Result<serde_json::Value, String> {
-    let result = tft_capture::list_windows();
-    serde_json::to_value(&result).map_err(|e| e.to_string())
-}
-
 /// Save the current frame and region crops for debugging.
 /// Returns the path to the debug directory.
 #[tauri::command]
@@ -125,20 +98,6 @@ pub fn save_debug_frame(
         Some(p) => Ok(p.save_debug_frame().map(|p| p.to_string_lossy().to_string())),
         None => Ok(None),
     }
-}
-
-/// Set which window to capture. Pass null/empty to revert to auto-detection.
-#[tauri::command]
-pub fn set_target_window(
-    title: Option<String>,
-    pipeline_state: State<'_, PipelineState>,
-) -> Result<(), String> {
-    let pipeline = pipeline_state.0.lock().map_err(|e| e.to_string())?;
-    if let Some(ref p) = *pipeline {
-        let target = title.filter(|t| !t.is_empty());
-        p.set_target_window(target);
-    }
-    Ok(())
 }
 
 /// Start video file analysis — decodes a video and feeds frames through the vision pipeline.

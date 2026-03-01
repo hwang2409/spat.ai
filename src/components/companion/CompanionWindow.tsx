@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useCaptureEvents } from "../../hooks";
 import { CaptureStatusPanel } from "./CaptureStatusPanel";
-import { WindowPicker } from "./WindowPicker";
 import { ShopPanel } from "./ShopPanel";
 import { EconomyPanel } from "./EconomyPanel";
 
@@ -53,7 +52,6 @@ export function CompanionWindow() {
 
       <div className="grid gap-4">
         <CaptureStatusPanel />
-        <WindowPicker />
         <EconomyPanel />
         <ShopPanel />
 
